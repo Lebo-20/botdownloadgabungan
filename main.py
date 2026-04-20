@@ -668,20 +668,36 @@ async def main():
     await db.init()
     cleanup_downloads()
     # Start Client with TOTAL Session recovery
+    session_file = 'drama_bot_session.session'
     try:
         await client.start(bot_token=settings.bot_token)
     except Exception as e:
-        if "readonly" in str(e).lower() or "locked" in str(e).lower():
-            logger.warning("Session database LOCKED/READONLY. Cleaning up...")
+        err_msg = str(e).lower()
+        if "readonly" in err_msg or "locked" in err_msg:
+            logger.warning(f"Session database error detected: {e}")
             try: await client.disconnect()
             except: pass
-            session_file = 'drama_bot_session.session'
+            
+            # Action: Clean up file
+            did_remove = False
             if os.path.exists(session_file):
-                os.remove(session_file)
-            logger.info("Session wiped. Rebooting process for fresh start...")
-            os.execl(sys.executable, sys.executable, *sys.argv)
+                try:
+                    os.chmod(session_file, 0o777)
+                    os.remove(session_file)
+                    logger.info(f"Cleaned up {session_file}")
+                    did_remove = True
+                except: pass
+            
+            # Anti-Loop: Only reboot if we cleaned something OR if file still exists
+            if os.path.exists(session_file) or did_remove:
+                logger.info("Rebooting bot for fresh session...")
+                os.execl(sys.executable, sys.executable, *sys.argv)
+            else:
+                logger.critical("FATAL: Directory is Read-Only. Bot cannot start.")
+                sys.exit(1)
         else:
             raise e
+
 
 
     worker.start()
