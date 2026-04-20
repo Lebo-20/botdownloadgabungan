@@ -60,6 +60,13 @@ async def track_user(event):
     # user_states.setdefault(user.id, {})
 
 
+async def notify_admins(text):
+    for admin_id in settings.admin_list:
+        try:
+            await client.send_message(admin_id, text)
+        except: pass
+
+
 async def build_platform_buttons(user_id: int, page: int = 0):
     names = sorted(ProviderFactory.get_provider_names())
     per_page = 8 # 4 rows of 2
@@ -559,10 +566,24 @@ async def download_callback(event):
         except asyncio.CancelledError:
             logger.warning(f"Task cancelled by user {chat_id}")
             await status_msg.edit("🛑 **Task Cancelled by User.**")
-        except Exception:
+        except Exception as e:
+            import traceback
+            error_details = traceback.format_exc()
             logger.exception(f"Download Error for {chat_id}")
-            try: await status_msg.edit("❌ **Global Error: Check Logs for details.**")
+            
+            # User Feedback
+            try: await status_msg.edit(f"❌ **Error Occurred.**\nAdmin has been notified.")
             except: pass
+            
+            # Admin Notification
+            admin_report = (f"🚨 **BOT ERROR REPORT**\n\n"
+                           f"👤 **User**: `{chat_id}`\n"
+                           f"📂 **Platform**: `{platform}`\n"
+                           f"🆔 **Drama ID**: `{drama_id}`\n"
+                           f"⚠️ **Error**: `{str(e)}`\n\n"
+                           f"📋 **Traceback**:\n```{error_details[:3000]}```")
+            await notify_admins(admin_report)
+
         finally:
             # Cleanup all temp files
             logger.info(f"Cleanup: {len(temp_files)} files for {chat_id}")
