@@ -128,5 +128,8 @@ class StardustTVProvider(BaseProvider):
             logger.error(f"Stardust Discovery Error: {e}")
             return []
 
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        return [{"id": "home", "label": "🏠 Home"}]
+
 # Register the provider
 ProviderFactory.register("stardust", StardustTVProvider)

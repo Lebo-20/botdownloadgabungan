@@ -51,9 +51,16 @@ class DramaBoxProvider(BaseProvider):
         try:
             response = await self.client.get(url, params=params)
             data = response.json()
-            if isinstance(data, dict) and "data" in data:
-                return data["data"]
-            return data if isinstance(data, dict) else {}
+            detail = data.get("data") if isinstance(data, dict) else {}
+            if not isinstance(detail, dict): detail = {}
+            
+            return {
+                "id": drama_id,
+                "title": detail.get("title") or detail.get("bookName") or detail.get("book_name") or detail.get("name") or "Unknown Title",
+                "description": detail.get("introduction") or detail.get("desc") or detail.get("summary") or "No description available.",
+                "poster": detail.get("cover") or detail.get("bookCover") or detail.get("poster"),
+                "total_episodes": detail.get("totalChapterNum") or detail.get("chapterCount") or detail.get("total_chapters") or 0
+            }
         except Exception as e:
             logger.error(f"DramaBox Detail Error: {e}")
             return {}
@@ -138,6 +145,9 @@ class DramaBoxProvider(BaseProvider):
         except Exception as e:
             logger.error(f"DramaBox Discovery Error ({category}): {e}")
             return []
+
+def get_supported_categories(self) -> List[Dict[str, str]]:
+        return [{"id": "latest", "label": "✨ Latest"}, {"id": "foryou", "label": "🔥 For You"}, {"id": "dubbed", "label": "🎙️ Dubbed"}]
 
 # Register the provider
 ProviderFactory.register("dramabox", DramaBoxProvider)

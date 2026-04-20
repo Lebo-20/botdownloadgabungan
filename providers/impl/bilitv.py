@@ -150,5 +150,8 @@ class BiliTVProvider(BaseProvider):
             logger.error(f"BiliTV Discovery Error: {e}")
             return []
 
+def get_supported_categories(self) -> List[Dict[str, str]]:
+        return [{"id": "home", "label": "🏠 Home"}]
+
 # Register the provider
 ProviderFactory.register("bilitv", BiliTVProvider)

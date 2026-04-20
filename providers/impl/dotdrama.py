@@ -132,5 +132,8 @@ class DotDramaProvider(BaseProvider):
             logger.error(f"DotDrama Discovery Error ({category}): {e}")
             return []
 
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
+
 # Register
 ProviderFactory.register("dotdrama", DotDramaProvider)

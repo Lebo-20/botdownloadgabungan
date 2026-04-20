@@ -145,5 +145,8 @@ class FlickReelsProvider(BaseProvider):
             logger.exception(f"FlickReels Discovery Error ({category})")
             return []
 
+def get_supported_categories(self) -> List[Dict[str, str]]:
+        return [{"id": "trending", "label": "📈 Trending"}]
+
 # Register
 ProviderFactory.register("flickreels", FlickReelsProvider)

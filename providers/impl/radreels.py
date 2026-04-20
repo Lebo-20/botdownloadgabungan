@@ -116,5 +116,8 @@ class RadReelsProvider(BaseProvider):
             logger.error(f"RadReels Video URL Error: {e}")
             return None
 
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
+
 # Register the provider
 ProviderFactory.register("radreels", RadReelsProvider)

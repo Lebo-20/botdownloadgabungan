@@ -166,10 +166,12 @@ class DramaBoxV2Provider(BaseProvider):
                     "poster": item.get("poster") or item.get("cover")
                 })
             return normalized
-
         except Exception as e:
             logger.error(f"DramaBoxV2 Discovery Error ({category}): {e}")
             return []
+
+def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
 
 # Register
 ProviderFactory.register("dramaboxv2", DramaBoxV2Provider)

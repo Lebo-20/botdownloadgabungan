@@ -144,6 +144,9 @@ class GoodShortProvider(BaseProvider):
             logger.error(f"GoodShort Discovery Error ({category}): {e}")
             return []
 
+def get_supported_categories(self) -> List[Dict[str, str]]:
+        return [{"id": "home", "label": "🏠 Home"}, {"id": "trending", "label": "📈 Hot"}]
+
     async def get_stream_url(self, video_id: str, episode_no: int = 1) -> Optional[str]:
         return None 
 

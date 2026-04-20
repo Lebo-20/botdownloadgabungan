@@ -113,5 +113,8 @@ class IDramaProvider(BaseProvider):
             logger.error(f"iDrama Unlock Error: {e}")
             return None
 
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
+
 # Register the provider
 ProviderFactory.register("idrama", IDramaProvider)

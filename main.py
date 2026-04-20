@@ -315,51 +315,24 @@ async def platform_callback(event):
     platform = event.data.decode().split(":")[1]
     user_states[event.chat_id] = {"platform": platform, "action": "idle"}
     
-    if platform == "freereels":
-        buttons = [
-            [Button.inline("🔍 Search", data=f"act:search:query:{platform}")],
-            [
-                Button.inline("🔥 For You", data=f"act:disc:foryou:{platform}"),
-                Button.inline("📈 Popular", data=f"act:disc:popular:{platform}")
-            ],
-            [
-                Button.inline("✨ New", data=f"act:disc:latest:{platform}"),
-                Button.inline("🎙️ Dubbing", data=f"act:disc:dubbed:{platform}")
-            ],
-            [
-                Button.inline("👩 Female", data=f"act:disc:female:{platform}"),
-                Button.inline("👨 Male", data=f"act:disc:male:{platform}")
-            ],
-            [
-                Button.inline("🎎 Anime", data=f"act:disc:anime:{platform}"),
-                Button.inline("⏳ Soon", data=f"act:disc:coming-soon:{platform}")
-            ],
-            [Button.inline("⬅️ Back", data="back_start")]
-        ]
-    elif platform == "flickreels":
-        buttons = [
-            [Button.inline("🔍 Search", data=f"act:search:query:{platform}")],
-            [
-                Button.inline("🏠 New Home", data=f"act:disc:home:{platform}"),
-                Button.inline("📈 Trending", data=f"act:disc:trending:{platform}")
-            ],
-            [Button.inline("⬅️ Back", data="back_start")]
-        ]
-
-    else:
-        # Discovery buttons
-        buttons = [
-            [Button.inline("🔍 Search", data=f"act:search:query:{platform}")],
-            [
-                Button.inline("🏠 Home", data=f"act:disc:home:{platform}"),
-                Button.inline("✨ Latest", data=f"act:disc:latest:{platform}")
-            ],
-            [
-                Button.inline("🔥 For You", data=f"act:disc:foryou:{platform}"),
-                Button.inline("🎙️ Dubbed", data=f"act:disc:dubbed:{platform}")
-            ],
-            [Button.inline("⬅️ Back", data="back_start")]
-        ]
+    prov = get_provider(platform)
+    categories = prov.get_supported_categories()
+    
+    # Base buttons: Search is always present
+    buttons = [[Button.inline("🔍 Search", data=f"act:search:query:{platform}")]]
+    
+    # Build grid of categories (2 per row)
+    for i in range(0, len(categories), 2):
+        row = []
+        cat1 = categories[i]
+        row.append(Button.inline(cat1["label"], data=f"act:disc:{cat1['id']}:{platform}"))
+        if i + 1 < len(categories):
+            cat2 = categories[i+1]
+            row.append(Button.inline(cat2["label"], data=f"act:disc:{cat2['id']}:{platform}"))
+        buttons.append(row)
+        
+    # Always add Back button at the end
+    buttons.append([Button.inline("⬅️ Back", data="back_start")])
     
     text = (f"🎬 Platform: **{platform.upper()}**\n\n"
             f"🏠 Explore home content or search individually.")

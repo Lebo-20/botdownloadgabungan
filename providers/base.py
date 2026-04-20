@@ -25,3 +25,10 @@ class BaseProvider(ABC):
     async def discover(self, category: str = "home") -> List[Dict[str, Any]]:
         """Optional method for discovering content (Home, Latest, etc)."""
         return []
+
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        """
+        Return a list of supported discovery categories with labels.
+        Example: [{"id": "home", "label": "🏠 Home"}]
+        """
+        return []

@@ -149,5 +149,8 @@ class FreeReelsProvider(BaseProvider):
             logger.error(f"FreeReels Discovery Error ({category}): {e}")
             return []
 
+def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
+
 # Register the provider
 ProviderFactory.register("freereels", FreeReelsProvider)

@@ -92,5 +92,8 @@ class FunDramaProvider(BaseProvider):
                 return ep.get("stream_url")
         return None
 
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
+
 # Register the provider
 ProviderFactory.register("fundrama", FunDramaProvider)

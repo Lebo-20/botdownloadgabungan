@@ -157,5 +157,8 @@ class MeloShortProvider(BaseProvider):
             logger.error(f"MeloShort Discovery Error ({category}): {e}")
             return []
 
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        return [{"id": "home", "label": "🏠 Home"}]
+
 # Register the provider
 ProviderFactory.register("meloshort", MeloShortProvider)

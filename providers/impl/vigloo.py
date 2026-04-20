@@ -165,10 +165,12 @@ class ViglooProvider(BaseProvider):
                     "platform": "vigloo",
                     "poster": item.get("poster")
                 })
-            return normalized
         except Exception as e:
             logger.error(f"Vigloo Discovery Error ({category}): {e}")
             return []
+
+def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
 
 # Register the provider
 ProviderFactory.register("vigloo", ViglooProvider)

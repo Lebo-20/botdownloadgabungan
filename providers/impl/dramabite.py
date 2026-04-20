@@ -93,5 +93,8 @@ class DramaBiteProvider(BaseProvider):
             logger.error(f"DramaBite Play Error: {e}")
             return None
 
+    def get_supported_categories(self) -> List[Dict[str, str]]:
+        return []
+
 # Register the provider
 ProviderFactory.register("dramabite", DramaBiteProvider)
