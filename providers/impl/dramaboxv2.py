@@ -34,13 +34,18 @@ class DramaBoxV2Provider(BaseProvider):
             normalized = []
             for item in results:
                 if not isinstance(item, dict): continue
+                # Multi-key ID lookup
+                d_id = item.get("id") or item.get("playletId") or item.get("dramaId")
+                if not d_id: continue
+                
                 normalized.append({
-                    "id": str(item.get("id") or item.get("playletId")),
+                    "id": str(d_id),
                     "title": item.get("title") or item.get("name") or "No Title",
                     "platform": "dramaboxv2",
                     "poster": item.get("poster") or item.get("cover")
                 })
             return normalized
+
         except Exception as e:
             logger.error(f"DramaBoxV2 Search Error: {e}")
             return []
@@ -76,7 +81,12 @@ class DramaBoxV2Provider(BaseProvider):
             
             chapters = data.get("data", [])
             if isinstance(chapters, dict):
-                chapters = chapters.get("records") or chapters.get("list") or []
+                chapters = chapters.get("records") or chapters.get("list") or chapters.get("rows") or []
+            
+            # If still not found, check if it's nested in chapters key
+            if not chapters and isinstance(data.get("data"), dict):
+                chapters = data["data"].get("chapters") or []
+
 
             # We also need stream URLs. endpoint /video-urls/:id might have them all.
             # We'll fetch stream URLs in get_stream_url or here.
@@ -146,13 +156,17 @@ class DramaBoxV2Provider(BaseProvider):
             normalized = []
             for item in results:
                 if not isinstance(item, dict): continue
+                d_id = item.get("id") or item.get("playletId") or item.get("dramaId")
+                if not d_id: continue
+
                 normalized.append({
-                    "id": str(item.get("id") or item.get("playletId")),
+                    "id": str(d_id),
                     "title": item.get("title") or item.get("name") or "No Title",
                     "platform": "dramaboxv2",
                     "poster": item.get("poster") or item.get("cover")
                 })
             return normalized
+
         except Exception as e:
             logger.error(f"DramaBoxV2 Discovery Error ({category}): {e}")
             return []
