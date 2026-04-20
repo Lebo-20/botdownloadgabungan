@@ -12,9 +12,14 @@ from core.processor import VideoProcessor
 from core.queue_worker import QueueWorker
 from core.uploader import TelegramUploader
 
-# Initialize Client with absolute path for stability
-session_name = os.path.join(os.getcwd(), 'drama_bot_session')
-client = TelegramClient(session_name, settings.telegram_api_id, settings.telegram_api_hash)
+# Ensure data directory exists
+if not os.path.exists('data'):
+    os.makedirs('data')
+
+# Initialize Client with absolute path inside data/ folder
+session_path = os.path.join(os.getcwd(), 'data', 'drama_bot_session')
+client = TelegramClient(session_path, settings.telegram_api_id, settings.telegram_api_hash)
+
 worker = QueueWorker(max_concurrent=settings.max_concurrent_tasks)
 processor = VideoProcessor(ffmpeg_path=settings.ffmpeg_path, aria2c_path=settings.aria2c_path)
 uploader = TelegramUploader(client)
@@ -655,16 +660,18 @@ def cleanup_downloads():
         try:
             if os.path.isfile(path): os.remove(path)
         except: pass
-    # Clean up concat files and sessions in root (including WAL files)
-    for f in os.listdir('.'):
-        if (f.startswith('concat_') and f.endswith('.txt')) or \
-           f.endswith('.session') or f.endswith('.session-journal') or \
-           f.endswith('.session-shm') or f.endswith('.session-wal'):
-            try: 
-                os.chmod(f, 0o777)
-                os.remove(f)
-                logger.info(f"Auto-cleaned session file: {f}")
-            except: pass
+    # Clean up sessions in data/ folder
+    data_dir = os.path.join(os.getcwd(), 'data')
+    if os.path.exists(data_dir):
+        for f in os.listdir(data_dir):
+            if f.startswith('drama_bot_session'):
+                try: 
+                    path = os.path.join(data_dir, f)
+                    os.chmod(path, 0o777)
+                    os.remove(path)
+                    logger.info(f"Cleaned session: {f}")
+                except: pass
+
 
 
 

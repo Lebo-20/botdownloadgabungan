@@ -3,7 +3,8 @@ import os
 from datetime import datetime
 
 class Database:
-    def __init__(self, db_path: str = "bot_data.db"):
+    def __init__(self, db_path: str = "data/bot_data.db"):
+
         self.db_path = db_path
 
     async def init(self):
