@@ -8,6 +8,11 @@ class Database:
 
     async def init(self):
         async with aiosqlite.connect(self.db_path) as db:
+            # Optimize for high concurrency (Anti-Lock)
+            await db.execute("PRAGMA journal_mode=WAL")
+            await db.execute("PRAGMA busy_timeout=5000")
+            await db.execute("PRAGMA synchronous=NORMAL")
+            
             # Users table
             await db.execute("""
                 CREATE TABLE IF NOT EXISTS users (
@@ -19,6 +24,7 @@ class Database:
                     expiry_at TIMESTAMP
                 )
             """)
+
             # Migration: Add expiry_at if it doesn't exist
             try:
                 await db.execute("ALTER TABLE users ADD COLUMN expiry_at TIMESTAMP")
