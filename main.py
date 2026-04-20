@@ -611,18 +611,24 @@ def cleanup_downloads():
 async def main():
     await db.init()
     cleanup_downloads()
-    # Start Client with Session recovery
+    # Start Client with TOTAL Session recovery
     try:
         await client.start(bot_token=settings.bot_token)
     except Exception as e:
-        if "readonly database" in str(e).lower() or "database is locked" in str(e).lower():
-            logger.warning("Session database error detected. Attempting to reset session file...")
+        if "readonly" in str(e).lower() or "locked" in str(e).lower():
+            logger.warning("Session database LOCKED/READONLY. Cleaning up...")
+            try: await client.disconnect()
+            except: pass
             session_file = 'drama_bot_session.session'
             if os.path.exists(session_file):
                 os.remove(session_file)
-            await client.start(bot_token=settings.bot_token)
+            logger.info("Session wiped. Rebooting process for fresh start...")
+            import sys
+            import os
+            os.execl(sys.executable, sys.executable, *sys.argv)
         else:
             raise e
+
 
     worker.start()
     logger.info("Bot is running (Python Enhanced)")
