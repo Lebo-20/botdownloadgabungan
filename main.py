@@ -102,7 +102,7 @@ async def build_platform_buttons(user_id: int, page: int = 0):
 async def build_admin_panel():
     total_users = await db.get_total_users()
     active_tasks = worker.pending_count
-    text = (f"🛠️ **ADMIN PANEL - XIAO REELS**\n\n"
+    text = (f"🛠️ **ADMIN PANEL**\n\n"
             f"👤 Total Users: `{total_users}`\n"
             f"⏳ Active Tasks: `{active_tasks}`\n\n"
             "Select a management option:")
@@ -119,7 +119,7 @@ async def build_settings_panel():
     text = ("⚙️ **SYSTEM SETTINGS**\n\n"
             "Manage bot updates and process lifecycle.")
     buttons = [
-        [Button.inline("🔄 Update Bot", data="adm:update"), Button.inline("♻️ Restart Bot", data="adm:restart")],
+        [Button.inline("🔄 /update", data="adm:update"), Button.inline("♻️ /restart", data="adm:restart")],
         [Button.inline("« Back to Admin", data="adm:dashboard")]
     ]
     return text, buttons
