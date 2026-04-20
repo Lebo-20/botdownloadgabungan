@@ -693,7 +693,8 @@ async def main():
     
     # Start Client with TOTAL Session recovery
 
-    session_file = 'drama_bot_session.session'
+    session_file = os.path.join(os.getcwd(), 'data', 'drama_bot_session.session')
+
     try:
         await client.start(bot_token=settings.bot_token)
     except Exception as e:
