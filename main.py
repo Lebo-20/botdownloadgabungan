@@ -103,13 +103,51 @@ async def build_admin_panel():
         [Button.inline("➕ Add FSub", data="adm:fsub_add"), Button.inline("➖ Del FSub", data="adm:fsub_del")],
         [Button.inline("📊 View FSub", data="adm:fsub_view"), Button.inline("📢 Broadcast", data="adm:broadcast")],
         [Button.inline("🔑 Add Member", data="adm:add_user"), Button.inline("👥 User List", data="adm:users")],
-        [Button.inline("⚙️ Settings", data="adm:settings"), Button.inline("« Back to Home", data="back_start")]
+        [Button.inline("⚙️ System Settings", data="adm:settings"), Button.inline("« Home", data="back_start")]
+    ]
+    return text, buttons
+
+async def build_settings_panel():
+    text = ("⚙️ **SYSTEM SETTINGS**\n\n"
+            "Manage bot updates and process lifecycle.")
+    buttons = [
+        [Button.inline("🔄 Update Bot", data="adm:update"), Button.inline("♻️ Restart Bot", data="adm:restart")],
+        [Button.inline("« Back to Admin", data="adm:dashboard")]
     ]
     return text, buttons
 
 @client.on(events.NewMessage(pattern='/id'))
 async def id_handler(event):
     await event.respond(f"👤 **User Information**\n\nYour Telegram ID: `{event.sender_id}`\nAccess Status: `{'Authorized' if await db.is_authorized(event.sender_id) else 'Guest'}`")
+
+@client.on(events.NewMessage(pattern='/update'))
+async def update_bot_handler(event):
+    if event.sender_id not in settings.admin_list:
+        return
+    
+    msg = await event.respond("📡 **Performing Total Update...**")
+    try:
+        import subprocess
+        # Deep Clean Sync
+        commands = [
+            ['git', 'fetch', '--all'],
+            ['git', 'reset', '--hard', 'origin/main'],
+            ['git', 'clean', '-fd']
+        ]
+        
+        output = ""
+        for cmd in commands:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            stdout, stderr = proc.communicate()
+            output += f"**{cmd[1]}**: {stdout[:100]}\n"
+        
+        await msg.edit(f"✅ **Total Update Complete!**\n\n{output}\n🔄 **Restarting bot...**")
+        import sys
+        import os
+        os.execl(sys.executable, sys.executable, *sys.argv)
+    except Exception as e:
+        await msg.edit(f"❌ **Total Update failed:** `{e}`")
+
 
 @client.on(events.NewMessage(pattern='/restart'))
 async def restart_bot_handler(event):
@@ -199,6 +237,41 @@ async def admin_callback(event):
         else:
             text = "📊 **FSub Channels**:\n" + "\n".join([f"- {c['name']} (`{c['id']}`)" for c in channels])
         await event.edit(text, buttons=[Button.inline("« Back", data="adm:dashboard")])
+    
+    elif data == "settings":
+        text, buttons = await build_settings_panel()
+        await event.edit(text, buttons=buttons)
+
+    elif data == "update":
+        await event.answer("📡 Performing Total Update...")
+        import subprocess
+        try:
+            # Clean sync: fetch, reset hard, and clean untracked
+            commands = [
+                ['git', 'fetch', '--all'],
+                ['git', 'reset', '--hard', 'origin/main'],
+                ['git', 'clean', '-fd']
+            ]
+            
+            output = ""
+            for cmd in commands:
+                proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                stdout, stderr = proc.communicate()
+                output += f"**{cmd[1]}**: {stdout[:100]}\n"
+
+            await event.respond(f"✅ **Total Update Complete!**\n\n{output}\n🔄 **Restarting bot...**")
+            import sys
+            import os
+            os.execl(sys.executable, sys.executable, *sys.argv)
+        except Exception as e:
+            await event.respond(f"❌ **Total Update failed:** `{e}`")
+
+
+    elif data == "restart":
+        await event.respond("🔄 **Restarting bot...**")
+        import sys
+        import os
+        os.execl(sys.executable, sys.executable, *sys.argv)
     
     else:
         await event.answer("⚙️ This feature is under development.", alert=True)
@@ -538,7 +611,19 @@ def cleanup_downloads():
 async def main():
     await db.init()
     cleanup_downloads()
-    await client.start(bot_token=settings.bot_token)
+    # Start Client with Session recovery
+    try:
+        await client.start(bot_token=settings.bot_token)
+    except Exception as e:
+        if "readonly database" in str(e).lower() or "database is locked" in str(e).lower():
+            logger.warning("Session database error detected. Attempting to reset session file...")
+            session_file = 'drama_bot_session.session'
+            if os.path.exists(session_file):
+                os.remove(session_file)
+            await client.start(bot_token=settings.bot_token)
+        else:
+            raise e
+
     worker.start()
     logger.info("Bot is running (Python Enhanced)")
     await client.run_until_disconnected()
