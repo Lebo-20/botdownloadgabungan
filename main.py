@@ -1,5 +1,6 @@
 import asyncio
 import os
+import sys
 import time
 from telethon import TelegramClient, events, Button
 from loguru import logger
@@ -623,8 +624,6 @@ async def main():
             if os.path.exists(session_file):
                 os.remove(session_file)
             logger.info("Session wiped. Rebooting process for fresh start...")
-            import sys
-            import os
             os.execl(sys.executable, sys.executable, *sys.argv)
         else:
             raise e
