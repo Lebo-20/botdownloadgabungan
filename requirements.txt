@@ -1,0 +1,8 @@
+telethon
+httpx
+python-dotenv
+asyncio
+aiofiles
+loguru
+pydantic
+pydantic-settings
