@@ -686,6 +686,7 @@ def cleanup_downloads():
 
 
 async def main():
+    global client
     await db.init()
     cleanup_downloads()
     # Wait a moment for OS to release file locks
@@ -721,10 +722,10 @@ async def main():
             else:
                 logger.warning("DIRECTORY IS READ-ONLY. Switching to MemorySession (Emergency Mode)...")
                 from telethon.sessions import MemorySession
-                # We must globalize the client change or just use the local one
-                global client
+                # Client reassignment
                 client = TelegramClient(MemorySession(), settings.telegram_api_id, settings.telegram_api_hash)
                 await client.start(bot_token=settings.bot_token)
+
 
         else:
             raise e
