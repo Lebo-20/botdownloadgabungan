@@ -219,41 +219,41 @@ async def admin_callback(event):
     
     data = event.data.decode().split(":")[1]
     
-    if data == "dashboard":
-        text, buttons = await build_admin_panel()
-        await event.edit(text, buttons=buttons)
+    try:
+        if data == "dashboard":
+            text, buttons = await build_admin_panel()
+            await event.edit(text, buttons=buttons)
+        
+        elif data == "users":
+            total = await db.get_total_users()
+            await event.edit(f"👥 **Total Members**: `{total}`", 
+                            buttons=[Button.inline("« Back", data="adm:dashboard")])
+        
+        elif data == "broadcast":
+            user_states[event.chat_id] = {"action": "broadcast_wait"}
+            await event.edit("📢 **BROADCAST MODE**\nSend the message you want to broadcast to all users.", 
+                            buttons=[Button.inline("« Cancel", data="adm:dashboard")])
     
-    elif data == "users":
-        total = await db.get_total_users()
-        await event.edit(f"👥 **Total Members**: `{total}`", 
-                        buttons=[Button.inline("« Back", data="adm:dashboard")])
+        elif data == "add_user":
+            user_states[event.chat_id] = {"action": "add_user_id"}
+            await event.edit("🔑 **ADD MEMBER**\nSilahkan masukan **Telegram ID** user yang ingin diberikan akses:", 
+                            buttons=[Button.inline("« Cancel", data="adm:dashboard")])
     
-    elif data == "broadcast":
-        user_states[event.chat_id] = {"action": "broadcast_wait"}
-        await event.edit("📢 **BROADCAST MODE**\nSend the message you want to broadcast to all users.", 
-                        buttons=[Button.inline("« Cancel", data="adm:dashboard")])
-
-    elif data == "add_user":
-        user_states[event.chat_id] = {"action": "add_user_id"}
-        await event.edit("🔑 **ADD MEMBER**\nSilahkan masukan **Telegram ID** user yang ingin diberikan akses:", 
-                        buttons=[Button.inline("« Cancel", data="adm:dashboard")])
-
-    elif data == "fsub_view":
-        channels = await db.get_fsub_channels()
-        if not channels:
-            text = "📊 **FSub Channels**: None configured."
-        else:
-            text = "📊 **FSub Channels**:\n" + "\n".join([f"- {c['name']} (`{c['id']}`)" for c in channels])
-        await event.edit(text, buttons=[Button.inline("« Back", data="adm:dashboard")])
+        elif data == "fsub_view":
+            channels = await db.get_fsub_channels()
+            if not channels:
+                text = "📊 **FSub Channels**: None configured."
+            else:
+                text = "📊 **FSub Channels**:\n" + "\n".join([f"- {c['name']} (`{c['id']}`)" for c in channels])
+            await event.edit(text, buttons=[Button.inline("« Back", data="adm:dashboard")])
+        
+        elif data == "settings":
+            text, buttons = await build_settings_panel()
+            await event.edit(text, buttons=buttons)
     
-    elif data == "settings":
-        text, buttons = await build_settings_panel()
-        await event.edit(text, buttons=buttons)
-
-    elif data == "update":
-        await event.answer("📡 Performing Total Update...")
-        import subprocess
-        try:
+        elif data == "update":
+            await event.answer("📡 Performing Total Update...")
+            import subprocess
             # Clean sync: fetch, reset hard, and clean untracked
             commands = [
                 ['git', 'fetch', '--all'],
@@ -266,20 +266,18 @@ async def admin_callback(event):
                 proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 stdout, stderr = proc.communicate()
                 output += f"**{cmd[1]}**: {stdout[:100]}\n"
-
+    
             await event.respond(f"✅ **Total Update Complete!**\n\n{output}\n🔄 **Restarting bot...**")
             import sys
             import os
             os.execl(sys.executable, sys.executable, *sys.argv)
-        except Exception as e:
-            await event.respond(f"❌ **Total Update failed:** `{e}`")
+    
+        elif data == "restart":
+            await event.respond("🔄 **Restarting bot...**")
+            import sys
+            import os
+            os.execl(sys.executable, sys.executable, *sys.argv)
 
-
-    elif data == "restart":
-        await event.respond("🔄 **Restarting bot...**")
-        import sys
-        import os
-        os.execl(sys.executable, sys.executable, *sys.argv)
     
     except Exception as e:
         import traceback
