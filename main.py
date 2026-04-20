@@ -14,13 +14,23 @@ from core.uploader import TelegramUploader
 
 # Ensure data directory exists
 if not os.path.exists('data'):
-    os.makedirs('data')
+    try: os.makedirs('data')
+    except: pass
 
-# Initialize Client with absolute path inside data/ folder
+# Smart Session Initialization
 session_path = os.path.join(os.getcwd(), 'data', 'drama_bot_session')
-client = TelegramClient(session_path, settings.telegram_api_id, settings.telegram_api_hash)
+try:
+    # Try using file-based session first
+    client = TelegramClient(session_path, settings.telegram_api_id, settings.telegram_api_hash)
+    logger.info("Initializing File-based Session...")
+except Exception as e:
+    # Fallback to Memory Session if filesystem is locked
+    from telethon.sessions import MemorySession
+    client = TelegramClient(MemorySession(), settings.telegram_api_id, settings.telegram_api_hash)
+    logger.warning(f"Filesystem Locked. Falling back to MemorySession. Error: {e}")
 
 worker = QueueWorker(max_concurrent=settings.max_concurrent_tasks)
+
 processor = VideoProcessor(ffmpeg_path=settings.ffmpeg_path, aria2c_path=settings.aria2c_path)
 uploader = TelegramUploader(client)
 
@@ -708,8 +718,13 @@ async def main():
                 logger.info("Rebooting bot for fresh session...")
                 os.execl(sys.executable, sys.executable, *sys.argv)
             else:
-                logger.critical("FATAL: Directory is Read-Only. Bot cannot start.")
-                sys.exit(1)
+                logger.warning("DIRECTORY IS READ-ONLY. Switching to MemorySession (Emergency Mode)...")
+                from telethon.sessions import MemorySession
+                # We must globalize the client change or just use the local one
+                global client
+                client = TelegramClient(MemorySession(), settings.telegram_api_id, settings.telegram_api_hash)
+                await client.start(bot_token=settings.bot_token)
+
         else:
             raise e
 
