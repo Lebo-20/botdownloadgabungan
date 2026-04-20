@@ -12,8 +12,9 @@ from core.processor import VideoProcessor
 from core.queue_worker import QueueWorker
 from core.uploader import TelegramUploader
 
-# Initialize Client
-client = TelegramClient('drama_bot_session', settings.telegram_api_id, settings.telegram_api_hash)
+# Initialize Client with absolute path for stability
+session_name = os.path.join(os.getcwd(), 'drama_bot_session')
+client = TelegramClient(session_name, settings.telegram_api_id, settings.telegram_api_hash)
 worker = QueueWorker(max_concurrent=settings.max_concurrent_tasks)
 processor = VideoProcessor(ffmpeg_path=settings.ffmpeg_path, aria2c_path=settings.aria2c_path)
 uploader = TelegramUploader(client)
@@ -667,7 +668,11 @@ def cleanup_downloads():
 async def main():
     await db.init()
     cleanup_downloads()
+    # Wait a moment for OS to release file locks
+    await asyncio.sleep(1.5)
+    
     # Start Client with TOTAL Session recovery
+
     session_file = 'drama_bot_session.session'
     try:
         await client.start(bot_token=settings.bot_token)
