@@ -281,8 +281,19 @@ async def admin_callback(event):
         import os
         os.execl(sys.executable, sys.executable, *sys.argv)
     
-    else:
-        await event.answer("⚙️ This feature is under development.", alert=True)
+    except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        logger.exception("Admin Callback Error")
+        admin_report = (f"🚨 **ADMIN PANEL ERROR**\n\n"
+                       f"👤 **User**: `{event.chat_id}`\n"
+                       f"⚙️ **Action**: `{data}`\n"
+                       f"⚠️ **Error**: `{str(e)}`\n\n"
+                       f"📋 **Traceback**:\n```{error_details[:3000]}```")
+        await notify_admins(admin_report)
+        await event.answer(f"❌ Admin Error: {e}", alert=True)
+
+
 
 @client.on(events.CallbackQuery(data=lambda d: d.startswith(b"p:")))
 async def platform_callback(event):
@@ -368,7 +379,19 @@ async def action_callback(event):
             msg_result = await event.respond(f"✅ **{param.upper()}** on **{platform.upper()}**:", buttons=buttons)
             user_states.setdefault(chat_id, {})["last_bot_msg"] = msg_result.id
         except Exception as e:
-            await status.edit(f"Error: {e}")
+            import traceback
+            error_details = traceback.format_exc()
+            logger.error(f"Discovery Error ({platform}:{param}): {e}")
+            
+            admin_report = (f"🚨 **DISCOVERY ERROR**\n\n"
+                           f"👤 **User**: `{event.chat_id}`\n"
+                           f"📂 **Platform**: `{platform}`\n"
+                           f"🧭 **Param**: `{param}`\n"
+                           f"⚠️ **Error**: `{str(e)}`\n\n"
+                           f"📋 **Traceback**:\n```{error_details[:3000]}```")
+            await notify_admins(admin_report)
+            await status.edit(f"❌ Discovery Error: {str(e)[:100]}")
+
 
 @client.on(events.NewMessage())
 async def message_handler(event):
@@ -469,11 +492,20 @@ async def detail_callback(event):
             await status.delete()
             
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
         logger.error(f"Detail Fetch Error: {e}")
-        try:
-            await status.edit(f"❌ Detail Error: {str(e)[:100]}")
-        except:
-            await event.respond(f"❌ Error: {str(e)[:100]}")
+        
+        admin_report = (f"🚨 **DETAIL FETCH ERROR**\n\n"
+                       f"👤 **User**: `{event.chat_id}`\n"
+                       f"🆔 **ID**: `{drama_id}`\n"
+                       f"⚠️ **Error**: `{str(e)}`\n\n"
+                       f"📋 **Traceback**:\n```{error_details[:3000]}```")
+        await notify_admins(admin_report)
+        
+        try: await status.edit(f"❌ Detail Error: {str(e)[:100]}")
+        except: await event.respond(f"❌ Error: {str(e)[:100]}")
+
 
 @client.on(events.CallbackQuery(data=lambda d: d.startswith(b"dl:")))
 async def download_callback(event):
