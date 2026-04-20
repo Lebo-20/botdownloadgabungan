@@ -655,14 +655,17 @@ def cleanup_downloads():
         try:
             if os.path.isfile(path): os.remove(path)
         except: pass
-    # Clean up concat files and sessions in root
+    # Clean up concat files and sessions in root (including WAL files)
     for f in os.listdir('.'):
-        if (f.startswith('concat_') and f.endswith('.txt')) or f.endswith('.session') or f.endswith('.session-journal'):
+        if (f.startswith('concat_') and f.endswith('.txt')) or \
+           f.endswith('.session') or f.endswith('.session-journal') or \
+           f.endswith('.session-shm') or f.endswith('.session-wal'):
             try: 
                 os.chmod(f, 0o777)
                 os.remove(f)
                 logger.info(f"Auto-cleaned session file: {f}")
             except: pass
+
 
 
 async def main():
