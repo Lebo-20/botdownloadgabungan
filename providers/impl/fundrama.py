@@ -48,7 +48,9 @@ class FunDramaProvider(BaseProvider):
         try:
             response = await self.client.get(url, params=params)
             data = response.json()
-            return data if isinstance(data, dict) else data.get("data", {})
+            if isinstance(data, dict) and "data" in data:
+                return data["data"]
+            return data if isinstance(data, dict) else {}
         except Exception as e:
             logger.error(f"FunDrama Detail Error: {e}")
             return {}

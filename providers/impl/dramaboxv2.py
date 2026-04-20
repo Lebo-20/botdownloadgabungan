@@ -61,10 +61,10 @@ class DramaBoxV2Provider(BaseProvider):
             
             return {
                 "id": drama_id,
-                "title": detail.get("title"),
-                "description": detail.get("introduction") or detail.get("desc"),
-                "poster": detail.get("poster") or detail.get("cover"),
-                "total_episodes": detail.get("count") or detail.get("episodeCount")
+                "title": detail.get("title") or detail.get("name") or detail.get("bookName") or detail.get("dramaName") or "Unknown Title",
+                "description": detail.get("introduction") or detail.get("desc") or detail.get("summary") or "No description.",
+                "poster": detail.get("poster") or detail.get("cover") or detail.get("bookCover") or detail.get("horizontal_cover"),
+                "total_episodes": detail.get("count") or detail.get("episodeCount") or detail.get("totalEpisode") or detail.get("total_chapters") or 0
             }
         except Exception as e:
             logger.error(f"DramaBoxV2 Detail Error: {e}")

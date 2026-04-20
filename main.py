@@ -732,6 +732,7 @@ async def main():
                 from telethon.sessions import MemorySession
                 # Client reassignment
                 client = TelegramClient(MemorySession(), settings.telegram_api_id, settings.telegram_api_hash)
+                uploader.client = client # IMPORTANT: Update uploader's client reference
                 await client.start(bot_token=settings.bot_token)
 
 

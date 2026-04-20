@@ -18,23 +18,32 @@ class QueueWorker:
         while self._running:
             chat_id, task_func, args, kwargs = await self.queue.get()
             try:
-                # Create the task but don't await yet if we want to track it
-                # However, semaphore needs to be respected.
-                async with self.semaphore:
-                    # Current task being executed
-                    task = asyncio.current_task()
-                    self.active_tasks[chat_id] = task
-                    logger.info(f"Executing task for {chat_id} with {task_func.__name__}")
-                    try:
-                        await task_func(*args, **kwargs)
-                    finally:
-                        self.active_tasks.pop(chat_id, None)
-            except asyncio.CancelledError:
-                logger.warning(f"Task for {chat_id} was cancelled.")
+                # Limit concurrency using semaphore
+                await self.semaphore.acquire()
+                
+                # Create a NEW task for the actual work so it can be cancelled
+                # without killing this worker loop.
+                task = asyncio.create_task(self._run_task(chat_id, task_func, *args, **kwargs))
+                self.active_tasks[chat_id] = task
+                
             except Exception as e:
-                logger.exception(f"Error executing task for {chat_id}: {e}")
-            finally:
+                logger.exception(f"Error preparing task for {chat_id}: {e}")
                 self.queue.task_done()
+                if self.semaphore.locked():
+                    self.semaphore.release()
+
+    async def _run_task(self, chat_id: int, task_func: Callable, *args, **kwargs):
+        try:
+            logger.info(f"Executing task for {chat_id} with {task_func.__name__}")
+            await task_func(*args, **kwargs)
+        except asyncio.CancelledError:
+            logger.warning(f"Task for {chat_id} was successfully cancelled.")
+        except Exception as e:
+            logger.exception(f"Error executing task for {chat_id}: {e}")
+        finally:
+            self.active_tasks.pop(chat_id, None)
+            self.semaphore.release()
+            self.queue.task_done()
 
     async def cancel_task(self, chat_id: int):
         if chat_id in self.active_tasks:

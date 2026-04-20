@@ -116,7 +116,7 @@ class FlickReelsProvider(BaseProvider):
         }
         target = endpoints.get(category, "api/home")
         url = f"{self.base_url}/{target}"
-        params = {"lang": self.lang, "page": 1}
+        params = {"lang": self.lang, "page": 1, "code": self.token}
         
         try:
             response = await self.client.get(url, params=params)

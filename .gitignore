@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.env
+data/
+downloads/
+temp_manifests/
+*.session
+*.session-journal
+bot_data.db
+node_modules/
+package-lock.json
+debug_flick.txt
+test_res.mp4
+concat_*.txt

@@ -154,7 +154,9 @@ class VideoProcessor:
     async def merge_videos(self, input_files: List[str], output_file: str, episode_count: int, on_progress: Optional[Callable] = None):
         validated_files = self.validate_files(input_files)
         # Use a unique concat file for each merge to avoid concurrency collisions
-        concat_file = f"concat_{os.path.basename(output_file)}.txt"
+        import uuid
+        temp_id = str(uuid.uuid4())[:8]
+        concat_file = f"concat_{temp_id}_{os.path.basename(output_file)}.txt"
         with open(concat_file, "w") as f:
             for file in validated_files:
                 # FFmpeg concat needs forward slashes or escaped backslashes for Windows paths
