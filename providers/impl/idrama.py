@@ -67,12 +67,15 @@ class IDramaProvider(BaseProvider):
         episodes = []
         if isinstance(data, dict):
             # Check root keys
-            episodes = data.get("episodes") or data.get("list") or data.get("records")
+            episodes = data.get("episodes") or data.get("list") or data.get("records") or \
+                       data.get("chapter_list") or data.get("chapters")
             # Check nested data
             if not episodes and "data" in data:
                 d = data["data"]
                 if isinstance(d, dict):
-                    episodes = d.get("episodes") or d.get("list") or d.get("records") or [d]
+                    episodes = d.get("episodes") or d.get("list") or d.get("records") or \
+                               d.get("chapter_list") or d.get("chapters") or [d]
+
                 elif isinstance(d, list):
                     episodes = d
             elif not episodes:
