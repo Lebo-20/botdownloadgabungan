@@ -392,21 +392,23 @@ async def action_callback(event):
             await cleanup_last_msg(event.chat_id)
             msg_result = await event.respond(f"✅ **{param.upper()}** on **{platform.upper()}**:", buttons=buttons)
             user_states.setdefault(chat_id, {})["last_bot_msg"] = msg_result.id
-        # Admin Notification
-        import traceback
-        error_details = traceback.format_exc()
-        logger.error(f"Discovery Error ({platform}:{param}): {e}")
-        
-        prov_url = getattr(get_provider(platform), 'base_url', 'Unknown')
-        admin_report = (f"🚨 **DISCOVERY ERROR**\n\n"
-                       f"👤 **User**: `{event.chat_id}`\n"
-                       f"📂 **Platform**: `{platform}`\n"
-                       f"🌐 **API Base**: `{prov_url}`\n"
-                       f"🧭 **Endpoint**: `{param}`\n"
-                       f"⚠️ **Error**: `{str(e)}`\n\n"
-                       f"📋 **Traceback**:\n```{error_details[:2000]}```")
-        await notify_admins(admin_report)
-        await status.edit(f"❌ Discovery Error: {str(e)[:100]}")
+        except Exception as e:
+            # Admin Notification
+            import traceback
+            error_details = traceback.format_exc()
+            logger.error(f"Discovery Error ({platform}:{param}): {e}")
+            
+            prov_url = getattr(get_provider(platform), 'base_url', 'Unknown')
+            admin_report = (f"🚨 **DISCOVERY ERROR**\n\n"
+                           f"👤 **User**: `{event.chat_id}`\n"
+                           f"📂 **Platform**: `{platform}`\n"
+                           f"🌐 **API Base**: `{prov_url}`\n"
+                           f"🧭 **Endpoint**: `{param}`\n"
+                           f"⚠️ **Error**: `{str(e)}`\n\n"
+                           f"📋 **Traceback**:\n```{error_details[:2000]}```")
+            await notify_admins(admin_report)
+            await status.edit(f"❌ Discovery Error: {str(e)[:100]}")
+
 
 
 
